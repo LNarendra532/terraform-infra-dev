@@ -17,3 +17,13 @@ variable "frontend_sg_description" {
   default = "SG_group Created for Instace Creation "
 }
 
+
+variable "bastion_sg_name" {
+    default = "fronend"
+}
+
+variable "bastion_sg_description" {
+  default = "SG_group Created for Instace Creation "
+}
+
+
