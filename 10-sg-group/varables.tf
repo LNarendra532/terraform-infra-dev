@@ -10,7 +10,7 @@ variable "project" {
 
 
 variable "frontend_sg_name" {
-    default = "fronend"
+    default = "frontend"
 }
 
 variable "frontend_sg_description" {
@@ -19,7 +19,7 @@ variable "frontend_sg_description" {
 
 
 variable "bastion_sg_name" {
-    default = "fronend"
+    default = "bastion"
 }
 
 variable "bastion_sg_description" {
