@@ -26,4 +26,8 @@ variable "bastion_sg_description" {
   default = "SG_group Created for Instace Creation "
 }
 
+variable "vpn_ports" {
+  
+  default = [22,443,1194,943]
+}
 
