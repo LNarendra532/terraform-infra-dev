@@ -33,7 +33,7 @@ module "backend_alb" {
      #vpc_id = data.aws_ssm_parameter.vpc_id.value
 }
 
-module "robohop_vpn" {  
+module "vpn" {  
   source = "../../terraform-aws-securitygroup"
   project = var.project
   environment = var.environment
