@@ -42,9 +42,59 @@ module "vpn" {
   
   sg_name = "security group for vpn "
     vpc_id = local.vpc_id 
+    #vpc_id = data.aws_ssm_parameter.vpc_id.value
+}
+
+module "mongodb" {  
+  source = "../../terraform-aws-securitygroup"
+  project = var.project
+  environment = var.environment
+
+  description = "vpn"
+  
+  sg_name = "security group for mongodb "
+    vpc_id = local.vpc_id 
      #vpc_id = data.aws_ssm_parameter.vpc_id.value
 
 }
+module "rabbitmq" {  
+  source = "../../terraform-aws-securitygroup"
+  project = var.project
+  environment = var.environment
+
+  description = "vpn"
+  sg_name = "security group for rabbitmq "
+  vpc_id = local.vpc_id 
+     #vpc_id = data.aws_ssm_parameter.vpc_id.value
+
+}
+
+module "mysql" {  
+  source = "../../terraform-aws-securitygroup"
+  project = var.project
+  environment = var.environment
+
+  description = "vpn"
+  sg_name = "security group for mysql "
+  vpc_id = local.vpc_id 
+     #vpc_id = data.aws_ssm_parameter.vpc_id.value
+
+}
+module "reddis" {  
+  source = "../../terraform-aws-securitygroup"
+  project = var.project
+  environment = var.environment
+
+  description = "vpn"
+  sg_name = "security group for reddis "
+  vpc_id = local.vpc_id 
+     #vpc_id = data.aws_ssm_parameter.vpc_id.value
+
+}
+
+
+
+
 # Bastoin/jump host accepting connection from my laptop
 resource "aws_security_group_rule" "bastion_laptop_ssh" {
   type              = "ingress"
@@ -67,7 +117,7 @@ resource "aws_security_group_rule" "backend_alb_connection_from_bastion" {
 
 #VPN ports to connet to private hosts 22, 443,1194,943
 resource "aws_security_group_rule" "vpn_ssh_https_1194_443" {
-  count = length(vpn.ports)
+  count = length(var.vpn_ports)
   type              = "ingress"
   from_port         = var.vpn_ports[count.index]
   to_port           = var.vpn_ports[count.index]
@@ -76,5 +126,48 @@ resource "aws_security_group_rule" "vpn_ssh_https_1194_443" {
   security_group_id = module.backend_alb.sg_id
 }
 
+
+
+
+resource "aws_security_group_rule" "mongodb_vpn_ssh" {
+  count = length(var.mongodb_ports_vpn)
+  type              = "ingress"
+  from_port         = var.mongodb_ports_vpn[count.index]
+  to_port           = var.mongodb_ports_vpn[count.index]
+  protocol          = "tcp"
+  source_security_group_id = module.vpn.sg_id # source VPN server
+  security_group_id = module.mongodb.sg_id # destionation ALB
+}
+
+resource "aws_security_group_rule" "redis_vpn_ssh" {
+  count = length(var.redis_ports_vpn)
+  type              = "ingress"
+  from_port         = var.redis_ports_vpn[count.index]
+  to_port           = var.redis_ports_vpn[count.index]
+  protocol          = "tcp"
+  source_security_group_id = module.vpn.sg_id
+  security_group_id = module.redis.sg_id
+}
+
+resource "aws_security_group_rule" "mysql_vpn_ssh" {
+  count = length(var.mysql_ports_vpn)
+  type              = "ingress"
+  from_port         = var.mysql_ports_vpn[count.index]
+  to_port           = var.mysql_ports_vpn[count.index]
+  protocol          = "tcp"
+  source_security_group_id = module.vpn.sg_id
+  security_group_id = module.mysql.sg_id
+}
+
+# opened as part of some jira-1234 from db team
+resource "aws_security_group_rule" "rabbitmq_vpn_ssh" {
+  count = length(var.rabbitmq_ports_vpn)
+  type              = "ingress"
+  from_port         = var.rabbitmq_ports_vpn[count.index]
+  to_port           = var.rabbitmq_ports_vpn[count.index]
+  protocol          = "tcp"
+  source_security_group_id = module.vpn.sg_id
+  security_group_id = module.rabbitmq.sg_id
+}
 
 
