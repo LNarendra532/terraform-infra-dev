@@ -22,8 +22,8 @@ data "aws_ssm_parameter" "bastion_sg_id" {
  name  = "/${var.project}/${var.environment}/bastion_sg_id"  
 
   # from the /10-sg-group/ module parameters.tf we should access the vpc_id for the for the sg_group
-}
 
+}
 
 
 data "aws_ssm_parameter" "public_subnet_ids" {
