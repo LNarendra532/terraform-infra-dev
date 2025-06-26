@@ -18,10 +18,12 @@ data "aws_ami" "openvpn" {
   }
 }
 
-data "aws_ssm_parameter" "vpn_sg_id" {
+
+data "aws_ssm_parameter" "vpn_sg_id" {  
   name = "/${var.project}/${var.environment}/vpn_sg_id"
 }
 
+# we are getting data like strings we need to convert in to list # in locals.rf we are doing
 data "aws_ssm_parameter" "public_subnet_ids" {
   name = "/${var.project}/${var.environment}/public_subnet_ids"
 }
