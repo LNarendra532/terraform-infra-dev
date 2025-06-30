@@ -40,7 +40,7 @@ resource "terraform_data" "catalogue" {
     aws_instance.catalogue.id
   ]
   
-  # Copies the bootstrap.sh file into /tmp
+  # Copies the catalogue.sh file into /tmp
   provisioner "file" {
     source      = "catalogue.sh"
     destination = "/tmp/catalogue.sh"
