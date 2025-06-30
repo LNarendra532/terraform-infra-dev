@@ -1,12 +1,17 @@
 module "backend_alb" {
   source = "terraform-aws-modules/alb/aws"  # opensource module
-  version = "9.16.0"
+  version = "9.16.0"  #ALB Module Version
   name    = "${var.project}-${var.environment}-backend-alb" #roboshop-dev-backend-alb
   vpc_id  = local.vpc_id
   subnets = local.private_subnet_ids
   security_groups = local.backend_alb_sg_id
   create_security_group = false # we are using our own secrity group  
-  internal = true # for privarte load balancer
+  internal = true # for private load balancer
+
+
+#https://github.com/terraform-aws-modules/terraform-aws-alb 
+#
+  # enable_deletion_protection = false
 
  
   tags = merge(
@@ -28,8 +33,21 @@ module "backend_alb" {
 
     fixed_response {
       content_type = "text/html"
-      message_body = "<h4>Hello Iam Form Bacekend_Alb</h4>"
+      message_body = "<h4>Hello <h1>NAREN</h1>  Iam Form Bacekend_Alb</h4>"
       status_code  = "200"
     }
   }
   }
+
+  resource "aws_route53_record" "backend_alb" {
+  zone_id = var.zone_id
+  name    = "*.backend-dev.${var.zone_name}"
+  type    = "A"
+
+  alias {
+    name                   = module.backend_alb.dns_name
+    zone_id                = module.backend_alb.zone_id
+    evaluate_target_health = true
+    # https://github.com/terraform-aws-modules/terraform-aws-alb check ouputs
+  }
+}
