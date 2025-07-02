@@ -1,3 +1,27 @@
+/*  target group opening on 8080 http TO SEND REQUEST TO TARGET GROUP # while creating auto-scaling group we have to choose as exisiting alb
+ 1.requests will goes to load balanacer 
+ | 2.load balancer listens on port number 80  | 
+ then load balancer will send on port 8080 to TARGET-GROUP */
+resource "aws_lb_target_group" "catalogue" {
+  name        = "${var.environment}-${var.project}-catalogue"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = local.vpc_id
+  deregistration_delay = 120  # seconds to delete the target group
+
+  health_check {
+    healthy_threshold = 2
+    interval = 5
+    matcher = "200-299"  # status code
+    path = "/health"
+    port = 8080
+    timeout = 2
+    unhealthy_threshold = 3
+  }
+}
+
+
+
 #Creating Catalogue instances 
 resource "aws_instance" "catalogue" {
   ami           =local.ami_id #data.aws_ami.joindevops.id
@@ -15,27 +39,7 @@ resource "aws_instance" "catalogue" {
   )
     
   }
-/*  target group opening on 8080 http TO SEND REQUEST TO TARGET GROUP # while creating auto-scaling group we have to choose as exisiting alb
- 1.requests will goes to load balanacer 
- | 2.load balancer listens on port number 80  | 
- then load balancer will send on port 8080 to TARGET-GROUP */
-resource "aws_lb_target_group" "catalogue" {
-  name        = "${var.environment}-${var.project}-catalogue"
-  port        = 8080
-  protocol    = "HTTP"
-  vpc_id      = local.vpc_id
-  deregistration_delay = 120  # seconds to delete the target group
 
-  health_check {
-    healthy_threshold = 2
-    interval = 5
-    matcher = "200-299"
-    path = "/health"
-    port = 8080
-    timeout = 2
-    unhealthy_threshold = 3
-  }
-}
   
 
 # Null_resource - it will create any resource , it will connect to the instances and we can perform our actions.
