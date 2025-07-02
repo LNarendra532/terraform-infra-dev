@@ -21,7 +21,10 @@ module "backend_alb" {
     }
   )
 }
-
+ /* 1.requests will goes to load balanacer 
+ | 2.load balancer listens on port number 80  | 
+ then load balancer will send on port 8080 to TARGET-GROUP */
+ 
 #aws_lb_listener will attached to backend_alb
   resource "aws_lb_listener" "backend_alb" {
   load_balancer_arn = module.backend_alb.arn
