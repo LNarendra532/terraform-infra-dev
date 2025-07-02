@@ -10,7 +10,7 @@ resource "aws_instance" "catalogue" {
   tags = merge(
 
     local.common_tags, {
-      Name = "${var.project}-${var.environment}-catalogue-server" #interpolation
+      Name = "${var.project}-${var.environment}-catalogue" #interpolation
     }
   )
     
@@ -56,8 +56,43 @@ resource "terraform_data" "catalogue" {
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/catalogue.sh",
-      "sudo sh /tmp/catalogue.sh catalogue"
+      "sudo sh /tmp/catalogue.sh catalogue ${var.environment}"
     ]
   }
 }
 
+resource "aws_instance_state" "catalogue" {
+  instance_id = aws_instance.catalogue.id   
+  state       = "stopped"
+  depends_on = [ terraform_data.catalogue ]  # Once completing the configuratoin then it will stop the ec2-instance
+
+
+}
+
+
+resource "aws_ami_from_instance" "catalogue" {
+  name               = "${var.environment}-${var.project}-catalogue"
+  source_instance_id = aws_instance.catalogue.id
+
+  depends_on = [ aws_instance_state.catalogue ] # After stopping the instance it will take the ami_id
+tags = merge(
+
+    local.common_tags, {
+      Name = "${var.project}-${var.environment}-catalogue" #interpolation
+    }
+
+}
+
+# AWS command line to delete the instances
+resource "terraform_data" "catalogue" {
+  triggers_replace = [
+    aws_instance.catalogue.id
+  ]
+  
+  
+  provisioner "local-exec" {
+    command = "aws ec2 terminate-instances --instance-ids ${aws_instance.catalogue.id}"
+  }
+  depends_on = [ aws_ami_from_instance.catalogue ] 
+  #destroying/terminating the terraform after taking the configured ami_id  provisioner-local-exec
+}

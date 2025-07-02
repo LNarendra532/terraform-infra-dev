@@ -36,4 +36,11 @@ variable "mongodb_ports" {
   default = [22,27017]
 }
 
+variable "zone_id" {
+    default = "Z0388521KFVW7JPV7X7D"
+  
+}
 
+variable "zone_name" {
+    default = "narendaws-84s.site"
+}
