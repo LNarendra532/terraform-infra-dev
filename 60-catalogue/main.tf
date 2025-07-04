@@ -11,12 +11,12 @@ resource "aws_lb_target_group" "catalogue" {
 
   health_check {
     healthy_threshold = 2
-    interval = 5
+    interval = 10
     matcher = "200-299"  # status code
     path = "/health"
     port = 8080
-    timeout = 2
-    unhealthy_threshold = 3
+    timeout = 5
+    unhealthy_threshold = 5
   }
 }
 
@@ -42,7 +42,7 @@ resource "aws_instance" "catalogue" {
 
   
 
-# Null_resource - it will create any resource , it will connect to the instances and we can perform our actions.
+# Null_resource - it will not create any resource but, it will connect to the instances and we can perform our actions.
 resource "terraform_data" "catalogue" {
   triggers_replace = [
     aws_instance.catalogue.id
@@ -69,12 +69,10 @@ resource "terraform_data" "catalogue" {
   }
 }
 
-resource "aws_instance_state" "catalogue" {
+resource "aws_ec2_instance_state" "catalogue" {
   instance_id = aws_instance.catalogue.id   
   state       = "stopped"
   depends_on = [ terraform_data.catalogue ]  # Once completing the configuratoin then it will stop the ec2-instance
-
-
 }
 
 
@@ -82,9 +80,9 @@ resource "aws_ami_from_instance" "catalogue" {
   name               = "${var.environment}-${var.project}-catalogue"
   source_instance_id = aws_instance.catalogue.id
 
-  depends_on = [ aws_instance_state.catalogue ] # After stopping the instance it will take the ami_id
-tags = merge(
+  depends_on = [ aws_ec2_instance_state.catalogue ] # After stopping the instance it will take the ami_id
 
+    tags = merge(
     local.common_tags, {
       Name = "${var.project}-${var.environment}-catalogue" #interpolation
     })
@@ -92,7 +90,7 @@ tags = merge(
 }
 
 # AWS command line to delete the instances
-resource "terraform_data" "catalogue" {
+resource "terraform_data" "catalogue_delete" {
   triggers_replace = [
     aws_instance.catalogue.id
   ]
@@ -105,15 +103,16 @@ resource "terraform_data" "catalogue" {
   #destroying/terminating the terraform after taking the configured ami_id  provisioner-local-exec
 }
 
-
+# while performing the lauch template EBS volme and Instance will create
 resource "aws_launch_template" "catalogue" {
   name = "${var.project}-${var.environment}-catalogue"
 
   image_id = aws_ami_from_instance.catalogue.id
-  instance_initiated_shutdown_behavior = "terminate"
+  instance_initiated_shutdown_behavior = "terminate" # if traafic is down going to delete the instance
   instance_type = "t3.micro"
   vpc_security_group_ids = [local.catalogue_sg_id]
   update_default_version = true # each time you update, new version will become default
+
   tag_specifications {
     resource_type = "instance"
     # EC2 tags created by ASG
@@ -150,11 +149,11 @@ resource "aws_launch_template" "catalogue" {
 resource "aws_autoscaling_group" "catalogue" {
   name                 = "${var.project}-${var.environment}-catalogue"
   desired_capacity   = 1
-  max_size           = 10
+  max_size           = 10      # instances numbers min, max, desired
   min_size           = 1
   target_group_arns = [aws_lb_target_group.catalogue.arn]
-  vpc_zone_identifier  = local.private_subnet_ids
-  health_check_grace_period = 90
+  vpc_zone_identifier  = local.private_subnet_ids  # we neded to give both subnets
+  health_check_grace_period = 120
   health_check_type         = "ELB"
 
   launch_template {
@@ -182,14 +181,18 @@ resource "aws_autoscaling_group" "catalogue" {
     preferences {
       min_healthy_percentage = 50
     }
-    triggers = ["launch_template"]
+    triggers = ["launch_template"]   # after changing the launch template it will trigger 
+    /* after changing the lauch template it will trigger  -
+     then auto-scaling retrigger and it will take new lauch-template create new 
+     insatnce and delete old instances. */
   }
 
   timeouts{
     delete = "15m"
   }
 }
-
+#aws_autoscaling_group on what basis we have to increase the insatnces
+# CPU utilization goes above 75% → Auto Scaling additional instances it willcreate.
 resource "aws_autoscaling_policy" "catalogue" {
   name                   = "${var.project}-${var.environment}-catalogue"
   autoscaling_group_name = aws_autoscaling_group.catalogue.name
@@ -203,8 +206,9 @@ resource "aws_autoscaling_policy" "catalogue" {
   }
 }
 
+# DNS name తో request వస్తే → ఈ Target Group కి forward అవుతుంది.
 resource "aws_lb_listener_rule" "catalogue" {
-  listener_arn = local.backend_alb_listener_arn
+  listener_arn = local.backend_alb_listener_arn   # backend alb listeners
   priority     = 10
 
   action {
@@ -215,6 +219,8 @@ resource "aws_lb_listener_rule" "catalogue" {
   condition {
     host_header {
       values = ["catalogue.backend-${var.environment}.${var.zone_name}"]
+
+      # if we give like catalogue.backend.dev.narendaws-84s.site it will goes to target group arn
     }
   }
 }
