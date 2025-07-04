@@ -85,6 +85,17 @@ module "backend_alb" {
      #vpc_id = data.aws_ssm_parameter.vpc_id.value
 }
 
+module "frontend_alb" {
+    source = "../../terraform-aws-securitygroup"
+    # source = "git::https://github.com/daws-84s/terraform-aws-securitygroup.git?ref=main"
+    project = var.project
+    environment = var.environment
+
+    sg_name = "frontend-alb"
+    sg_description = "for frontend alb"
+    vpc_id = local.vpc_id
+}
+
 module "vpn" {  
   source = "../../terraform-aws-securitygroup"
   project = var.project
@@ -132,13 +143,13 @@ module "mysql" {
      #vpc_id = data.aws_ssm_parameter.vpc_id.value
 
 }
-module "reddis" {  
+module "redis" {  
   source = "../../terraform-aws-securitygroup"
   project = var.project
   environment = var.environment
 
  sg_description = "vpn"
-  sg_name = "security group for reddis "
+  sg_name = "security group for redis "
   vpc_id = local.vpc_id 
      #vpc_id = data.aws_ssm_parameter.vpc_id.value
 
@@ -279,6 +290,8 @@ resource "aws_security_group_rule" "rabbitmq_payment" {
   source_security_group_id = module.payment.sg_id
   security_group_id = module.rabbitmq.sg_id
 }
+
+
 
 #CATALOGUE
 # ingress rule backend_alb.sg_id,vpn.sg_id ,vpn.sg_id ,bastion.sg_id ,catalogue.sg_id
@@ -457,7 +470,7 @@ resource "aws_security_group_rule" "frontend_vpn" {
   security_group_id = module.frontend.sg_id
 }
 
-resource "aws_security_group_rule" "frontend_frontend_alb" {
+resource "aws_security_group_rule" "frontend_frontend_alb" {  # frontend accepting from front_end alb
   type              = "ingress"
   from_port         = 80
   to_port           = 80
