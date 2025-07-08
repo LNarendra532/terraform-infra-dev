@@ -1,4 +1,6 @@
+#MONGODB SERVER CREATION
 resource "aws_instance" "mongodb" {
+
   ami           =local.ami_id #data.aws_ami.joindevops.id
   instance_type = "t3.micro"
   vpc_security_group_ids = [local.mongodb_sg_id]
@@ -12,7 +14,7 @@ resource "aws_instance" "mongodb" {
     }
   )
     
-  }
+}
 
 resource "terraform_data" "mongodb" {
   triggers_replace = [
@@ -40,7 +42,7 @@ resource "terraform_data" "mongodb" {
   }
 }
 
-
+#REDDIS_SERVER CREATION
 resource "aws_instance" "redis" {
   ami           = local.ami_id
   instance_type = "t3.micro"
@@ -55,7 +57,6 @@ resource "aws_instance" "redis" {
   )
 }
 
-# REDDIS _SERVER
 resource "terraform_data" "redis" {
   triggers_replace = [
     aws_instance.redis.id
@@ -81,7 +82,7 @@ resource "terraform_data" "redis" {
   }
 }
 
- #MYSQL_SERVER
+ #MYSQL_SERVER CREATION
 resource "aws_instance" "mysql" {
   ami           = local.ami_id
   instance_type = "t3.micro"
@@ -116,12 +117,12 @@ resource "terraform_data" "mysql" {
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/bootstrap.sh",
-    #   "sudo sh /tmp/bootstrap.sh mysql ${var.environment}"
-    "sudo sh /tmp/bootstrap.sh mysql ${var.environment}"
+      "sudo sh /tmp/bootstrap.sh mysql ${var.environment}"
     ]
   }
 }
 
+#RABBITMQ SERVER CREATION
 resource "aws_instance" "rabbitmq" {
   ami           = local.ami_id
   instance_type = "t3.micro"
@@ -161,7 +162,8 @@ resource "terraform_data" "rabbitmq" {
   }
 }
 
-
+# CREATING DNS ROUTE 53 FOR MONGODB,
+#REDDIS,MYSQL ,RABBITMQ
 resource "aws_route53_record" "mongodb" {
   zone_id = var.zone_id
   name    = "mongodb-${var.environment}.${var.zone_name}" # mongodb-dev.daws84s.site -> record name creation
