@@ -5,6 +5,13 @@ resource "aws_instance" "bastion" {
 
   subnet_id = local.public_subnet_id
 
+   # need more for terraform - OTher will get space usage eroor
+  root_block_device {
+    volume_size = 50
+    volume_type = "gp3" # or "gp2", depending on your preference
+  }
+
+
   tags = merge(
 
     local.common_tags, {
@@ -13,3 +20,26 @@ resource "aws_instance" "bastion" {
   )
     
   }
+
+
+  resource "terraform_data" "redis" {
+  triggers_replace = [
+    aws_instance.redis.id
+  ]
+  
+  connection {
+    type     = "ssh"
+    user     = "ec2-user"
+    password = "DevOps321"
+    host     = aws_instance.redis.private_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum install -y yum-utils",
+      "sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo",
+      "sudo yum -y install terraform"
+      
+    ]
+  }
+}
