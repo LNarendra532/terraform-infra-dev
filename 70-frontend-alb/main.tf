@@ -46,7 +46,7 @@ module "frontend_alb" {
 
   resource "aws_route53_record" "frontend_alb" {
   zone_id = var.zone_id
-  name    = "*.${var.zone_name}"   #  *.narendaws-84s.site - cert name
+  name    = "${var.environment}.${var.zone_name}"   #  *.narendaws-84s.site - cert name
   type    = "A"
 
   alias {
