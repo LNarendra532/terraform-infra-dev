@@ -141,11 +141,7 @@ resource "terraform_data" "rabbitmq" {
   triggers_replace = [
     aws_instance.rabbitmq.id
   ]
-  # Copies the bootstrap.sh file into /tmp
-  provisioner "file" {
-    source      = "bootstrap.sh"
-    destination = "/tmp/bootstrap.sh"
-  }
+ 
 
   connection {
     type     = "ssh"
