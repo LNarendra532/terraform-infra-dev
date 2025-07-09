@@ -29,6 +29,6 @@ resource "aws_route53_record" "narendaws-84s" {
 }
 
 resource "aws_acm_certificate_validation" "narendaws-84s" {
-  certificate_arn         = aws_acm_certificate.narendaws-84s.arn
-  validation_record_fqdns = [for record in aws_route53_record.narendaws-84s : record.fqdn]
+  certificate_arn         = aws_acm_certificate.narendaws-84s.arn #
+  validation_record_fqdns = [for record in aws_route53_record.narendaws-84s : record.fqdn] #
 }
