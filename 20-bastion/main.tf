@@ -26,7 +26,13 @@ resource "aws_instance" "bastion" {
   triggers_replace = [
     aws_instance.redis.id
   ]
-  
+
+   # Copies the bastion.sh file into /tmp
+  provisioner "file" {
+    source      = "bastion.sh"
+    destination = "/tmp/bastion.sh"
+  }
+
   connection {
     type     = "ssh"
     user     = "ec2-user"
@@ -38,7 +44,8 @@ resource "aws_instance" "bastion" {
     inline = [
       "sudo yum install -y yum-utils",
       "sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo",
-      "sudo yum -y install terraform"
+      "sudo yum -y install terraform",
+      "sudo sh /tmp/bastion.sh"
       
     ]
   }
